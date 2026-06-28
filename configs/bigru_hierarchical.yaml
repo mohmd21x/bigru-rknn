@@ -1,0 +1,38 @@
+# Hierarchical dual-stream BiGRU fall detection — default training config.
+
+run_name: bigru_hierarchical
+
+model:
+  name: bigru_hierarchical
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.3
+  num_classes: 2
+
+data:
+  window_size: 64
+  stride: 32
+  outputs_dir: dataset/outputs
+  features_dir: dataset/features
+  splits_dir: dataset/splits
+  train_manifest: train.csv
+  test_manifest: test.csv
+  val_ratio: 0.1
+  min_valid_frame_ratio: 0.5
+  num_workers: 4
+  use_weighted_sampler: true
+
+training:
+  batch_size: 64
+  epochs: 500
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  gradient_clip: 1.0
+  class_weights: auto
+  seed: 42
+  early_stopping_patience: 100
+  checkpoint_dir: checkpoints
+
+evaluation:
+  aggregation: clip_max
+  reports_dir: reports

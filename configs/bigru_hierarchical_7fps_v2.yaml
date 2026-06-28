@@ -1,0 +1,56 @@
+# Hierarchical dual-stream BiGRU v2 — 7.5 FPS, group-aware split, focal loss,
+# pose augmentation, and feature standardization.
+
+run_name: bigru_hierarchical_7fps_v2
+
+model:
+  name: bigru_hierarchical_v2
+  hidden_dim: 96            # slightly smaller than v1 (128) to curb overfitting
+  num_layers: 2
+  dropout: 0.4              # was 0.3 — stronger regularization
+  num_classes: 2
+  bidirectional: true       # set false for causal/low-latency streaming
+  use_layernorm: true
+  standardize_features: true
+
+data:
+  window_size: 16
+  stride: 8
+  outputs_dir: dataset/outputs_7fps
+  features_dir: dataset/features_7fps
+  splits_dir: dataset/splits_7fps
+  train_manifest: train.csv
+  val_manifest: val.csv      # explicit leak-free val (group-aware split)
+  test_manifest: test.csv
+  val_ratio: 0.0             # ignored when val_manifest is present
+  min_valid_frame_ratio: 0.5
+  num_workers: 4
+  use_weighted_sampler: true
+  augment:
+    enabled: true
+    hflip_prob: 0.5
+    scale_prob: 0.5
+    scale_range: [0.9, 1.1]
+    coord_noise_std: 0.02
+    joint_dropout_prob: 0.2
+    max_dropped_joints: 2
+    frame_dropout_prob: 0.2
+    max_dropped_frames: 2
+
+training:
+  batch_size: 64
+  epochs: 500
+  lr: 1.0e-4
+  weight_decay: 3.0e-4       # was 1e-4 — stronger weight decay
+  gradient_clip: 1.0
+  loss: focal                # focal loss (set "cross_entropy" to revert)
+  focal_gamma: 1.5
+  focal_alpha: auto          # reuse inverse-frequency class weights
+  class_weights: auto
+  seed: 42
+  early_stopping_patience: 60
+  checkpoint_dir: checkpoints
+
+evaluation:
+  aggregation: clip_max
+  reports_dir: reports

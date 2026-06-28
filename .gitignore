@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+
+# Training data & generated features (~GB)
+dataset/
+
+# Trained checkpoints & large/regeneratable exports
+checkpoints/
+weights/*
+!weights/README.md
+!weights/bigru_hierarchical.onnx
+!weights/bigru_hierarchical.rknn
+!weights/yolov8n-pose.pt
+
+# Test / demo videos
+Videos/
+
+# Benchmark & demo outputs
+test/output/
+reports/
+
+# RTMO ONNX weights & demo media (scripts/README stay tracked)
+rtmo/*.onnx
+rtmo/video/
+rtmo/.git/
+rtmo/__pycache__/
+
+# C++ feature extractor build & sample CSV I/O
+pose_features/build/
+pose_features/input_csv/
+pose_features/output_csv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs & temp files
+*.log
+*.tmp
+.cache/

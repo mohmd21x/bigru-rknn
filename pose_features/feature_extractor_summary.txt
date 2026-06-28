@@ -1,0 +1,122 @@
+Feature Extractor Summary (standalone_utils/pose_features)
+==========================================================
+
+1) Full current exported CSV feature set
+----------------------------------------
+
+Metadata
+- video_name
+- frame_index
+- timestamp
+- person_id
+
+Normalized pose (34 values)
+- norm_kpt0_x, norm_kpt0_y
+- norm_kpt1_x, norm_kpt1_y
+- norm_kpt2_x, norm_kpt2_y
+- norm_kpt3_x, norm_kpt3_y
+- norm_kpt4_x, norm_kpt4_y
+- norm_kpt5_x, norm_kpt5_y
+- norm_kpt6_x, norm_kpt6_y
+- norm_kpt7_x, norm_kpt7_y
+- norm_kpt8_x, norm_kpt8_y
+- norm_kpt9_x, norm_kpt9_y
+- norm_kpt10_x, norm_kpt10_y
+- norm_kpt11_x, norm_kpt11_y
+- norm_kpt12_x, norm_kpt12_y
+- norm_kpt13_x, norm_kpt13_y
+- norm_kpt14_x, norm_kpt14_y
+- norm_kpt15_x, norm_kpt15_y
+- norm_kpt16_x, norm_kpt16_y
+
+Distances
+- dist_shoulder_width
+- dist_hip_width
+- dist_nose_to_hip
+- dist_left_thigh
+- dist_right_thigh
+- dist_left_shin
+- dist_right_shin
+- dist_hand_to_hand
+- dist_left_hand_to_hip
+- dist_right_hand_to_hip
+
+Joint angles
+- angle_left_hip
+- angle_right_hip
+- angle_left_knee
+- angle_right_knee
+
+Torso-related features
+- torso_angle
+- torso_angle_std
+- angle_change
+- torso_angular_velocity
+
+Hip-related features
+- hip_height
+- min_hip_height_over_window
+- hip_height_change
+
+BBox-related features
+- bbox_aspect_ratio
+- estimated_bbox_height
+
+Velocity-related features
+- vel_hip_vx
+- vel_hip_vy
+- rolling_mean_vertical_velocity
+- acceleration
+- vel_hip_speed
+- vel_max_wrist_speed
+- vel_max_ankle_speed
+
+Helper / validity columns
+- valid_prev_pose
+- valid_pose
+
+
+2) Old-project-inspired features now implemented
+------------------------------------------------
+- torso_angle
+- angle_change
+- torso_angular_velocity
+- hip_height
+- hip_height_change
+- bbox_aspect_ratio (keypoint-estimated equivalent)
+- rolling_mean_vertical_velocity (windowed smoothing)
+- acceleration (from smoothed vertical velocity)
+- min_hip_height_over_window
+- torso_angle_std (window-based stability spread)
+
+
+3) Old-project logic intentionally not implemented (different layer)
+--------------------------------------------------------------------
+
+A) State-machine logic
+- Multi-state fall pipeline (NORMAL -> FALL_IN_PROGRESS -> FALL_TRIGGERED -> FALL_CONFIRMED)
+- Confirmation timers and extended observation flow
+- Recovery/cancel transitions as detector states
+
+B) Detector / rule logic
+- Hand-crafted rule triggers (rule1..rule5)
+- Combined fallCriteriaMet trigger gating
+- Thresholded detector booleans used directly for event decisions
+- Final event-level fall confirmation output logic
+
+C) Tracking / Kalman logic
+- Kalman filter state, prediction, correction
+- Detection-to-track assignment and gating decisions
+- Track lifecycle cleanup and detector-side identity management
+
+
+4) Final conclusion
+-------------------
+The standalone feature extractor is now strong and broadly complete for offline
+pose-derived feature generation, including useful geometric, temporal, and
+window-based signals inspired by the old project.
+
+Natural next step:
+a) Run on full dataset and validate feature quality/distributions.
+b) Build ML-ready sequences/windows from exported CSV.
+c) Optionally add separate rule/debug columns later (without merging full detector state-machine logic into the extractor).
