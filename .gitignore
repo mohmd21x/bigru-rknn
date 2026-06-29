@@ -45,6 +45,7 @@ reports/
 
 # RTMO ONNX weights & demo media (scripts/README stay tracked)
 rtmo/*.onnx
+!rtmo/rtmo-s.onnx
 rtmo/video/
 rtmo/.git/
 rtmo/__pycache__/

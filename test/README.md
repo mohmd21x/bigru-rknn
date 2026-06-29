@@ -38,7 +38,9 @@ These files are tracked in Git so you can `git push` on your PC and `git pull` o
 |------|------|---------|
 | `weights/bigru_hierarchical.onnx` | ~5 MB | ONNX reference + benchmark baseline |
 | `weights/bigru_hierarchical.rknn` | ~23 MB | NPU inference on Rockchip |
-| `weights/yolov8n-pose.pt` | ~7 MB | YOLO pose for the benchmark pipeline |
+| `rtmo/rtmo-s.onnx` | ~38 MB | RTMO pose (no ultralytics / PyTorch needed) |
+
+YOLO weights (`weights/yolov8n-pose.pt`) are optional — only needed for `--pose-backend yolo`.
 
 **On your PC (first time):**
 
@@ -53,20 +55,35 @@ git push -u origin main
 **On the Rockchip board:**
 
 ```bash
-git clone <your-repo-url> LSTM-GRU
-cd LSTM-GRU
-pip install -r requirements.txt
+git clone git@github.com:mohmd21x/bigru-rknn.git
+cd bigru-rknn
+pip install onnxruntime opencv-python numpy
 # rknnlite2 is usually pre-installed with the Rockchip SDK / system image
+# ultralytics is NOT required when using RTMO pose
 ```
 
 Copy test videos separately (too large for Git):
 
 ```bash
 # From PC
-scp Videos/*.mp4 user@board:/path/to/LSTM-GRU/Videos/
+scp Videos/*.mp4 user@board:/path/to/bigru-rknn/Videos/
 ```
 
-**Run benchmark on board:**
+**Run benchmark on board (RTMO pose — recommended, same as `run_realtime.py`):**
+
+```bash
+python test/benchmark_onnx_vs_rknn.py \
+  --pose-backend rtmo \
+  --rtmo-onnx rtmo/rtmo-s.onnx \
+  --conf 0.5 \
+  --onnx  weights/bigru_hierarchical.onnx \
+  --rknn  weights/bigru_hierarchical.rknn \
+  --video Videos/adl1-cam-2-1-1.mp4
+```
+
+RTMO uses **onnxruntime** only (CPU on the board). RKNN fall inference uses `rknnlite2` automatically.
+
+Alternative with YOLO (requires `pip install ultralytics` + `weights/yolov8n-pose.pt`):
 
 ```bash
 python test/benchmark_onnx_vs_rknn.py \
@@ -76,8 +93,6 @@ python test/benchmark_onnx_vs_rknn.py \
   --yolo-weights weights/yolov8n-pose.pt \
   --device cpu
 ```
-
-Use `--device cpu` for YOLO on the board unless you have a GPU/NPU pose backend configured. RKNN fall inference uses `rknnlite2` automatically.
 
 To re-convert ONNX → RKNN on the board (optional, usually done on PC with `rknn-toolkit2`):
 
@@ -94,7 +109,7 @@ python scripts/convert_bigru_onnx_to_rknn.py \
 The benchmark script runs a headless pipeline on one or more videos:
 
 ```
-Video → YOLO pose → PoseFeatureExtractor (python) → FallFrameBuffer (64 frames)
+Video → pose (YOLO or RTMO) → PoseFeatureExtractor (python) → FallFrameBuffer (64 frames)
   → OnnxFallPredictor (CPU)  ─┐
   → RknnFallPredictor (NPU)  ─┴─ compare per window
 ```
@@ -104,12 +119,26 @@ Both predictors receive **identical** numpy tensors from the shared buffer. RKNN
 1. `rknnlite2` (`RKNNLite`) on the Rockchip board
 2. `rknn-toolkit2` (`RKNN.init_runtime(target=None)`) for PC simulation
 
+**PC (YOLO pose, default):**
+
 ```bash
 python test/benchmark_onnx_vs_rknn.py \
   --onnx  weights/bigru_hierarchical.onnx \
   --rknn  weights/bigru_hierarchical.rknn \
   --video Videos/adl1-cam-2-1-1.mp4 Videos/shakiba-fall-fast-phone-5-1.mp4 \
   --yolo-weights weights/yolov8n-pose.pt
+```
+
+**Rockchip or headless (RTMO pose, no ultralytics):**
+
+```bash
+python test/benchmark_onnx_vs_rknn.py \
+  --pose-backend rtmo \
+  --rtmo-onnx rtmo/rtmo-s.onnx \
+  --conf 0.5 \
+  --onnx  weights/bigru_hierarchical.onnx \
+  --rknn  weights/bigru_hierarchical.rknn \
+  --video Videos/adl1-cam-2-1-1.mp4
 ```
 
 ### Useful benchmark flags
@@ -119,7 +148,10 @@ python test/benchmark_onnx_vs_rknn.py \
 | `--onnx` | `weights/bigru_hierarchical.onnx` | ONNX fall classifier |
 | `--rknn` | `weights/bigru_hierarchical.rknn` | RKNN fall classifier |
 | `--video` | *(required)* | One or more input video paths |
-| `--yolo-weights` | `weights/yolo8n.pt` | YOLOv8 pose model |
+| `--pose-backend` | `yolo` | `yolo` (ultralytics) or `rtmo` (onnxruntime, for Rockchip) |
+| `--yolo-weights` | `weights/yolo8n.pt` | YOLOv8 pose model (`--pose-backend yolo`) |
+| `--rtmo-onnx` | `rtmo/rtmo-s.onnx` | RTMO ONNX model (`--pose-backend rtmo`) |
+| `--conf` | `0.35` (yolo) / `0.5` (rtmo) | Person detection confidence |
 | `--window-size` | `64` | Model temporal window |
 | `--clip-frames` | `window-size` | Real frames before predicting |
 | `--fall-threshold` | `0.5` | Label threshold on `fall_prob` |

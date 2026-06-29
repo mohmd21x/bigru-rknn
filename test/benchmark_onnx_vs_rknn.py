@@ -2,7 +2,9 @@
 """Benchmark ONNX vs RKNN fall classifiers on shared pose-feature windows.
 
 Pipeline (headless):
-  YOLO pose -> PoseFeatureExtractor (python) -> FallFrameBuffer -> ONNX + RKNN
+  pose backend (YOLO or RTMO) -> PoseFeatureExtractor (python) -> FallFrameBuffer -> ONNX + RKNN
+
+On Rockchip (no ultralytics): use --pose-backend rtmo --rtmo-onnx rtmo/rtmo-s.onnx
 """
 
 from __future__ import annotations
